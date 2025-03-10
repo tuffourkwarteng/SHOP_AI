@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using pos_service.Data;
 using pos_service.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace pos_service.Controllers
 {
@@ -15,26 +17,49 @@ namespace pos_service.Controllers
             _context = context;
         }
 
-        // GET: /api/Product
+        // ✅ GET: /api/Product - Get all products
         [HttpGet]
         public ActionResult<IEnumerable<Product>> GetProducts()
         {
-            return _context.Products.ToList();
+            return Ok(_context.Products.ToList());
         }
 
-        // POST: /api/Product
-        [HttpPost]
-        public ActionResult<Product> AddProduct(Product product)
+        // ✅ GET: /api/Product/{id} - Get a single product by ID
+        [HttpGet("{id}")]
+        public ActionResult<Product> GetProductById(int id)
         {
+            var product = _context.Products.Find(id);
+            if (product == null)
+            {
+                return NotFound($"Product with ID {id} not found.");
+            }
+            return Ok(product);
+        }
+
+        // ✅ POST: /api/Product - Add a new product
+        [HttpPost]
+        public ActionResult<Product> AddProduct([FromBody] Product product)
+        {
+            if (product == null)
+            {
+                return BadRequest("Invalid product data.");
+            }
+
             _context.Products.Add(product);
             _context.SaveChanges();
-            return CreatedAtAction(nameof(GetProducts), new { id = product.Id }, product);
+
+            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
         }
 
-
-                [HttpPut("{id}")]
+        // ✅ PUT: /api/Product/{id} - Update a product
+        [HttpPut("{id}")]
         public IActionResult UpdateProduct(int id, [FromBody] Product updatedProduct)
         {
+            if (updatedProduct == null)
+            {
+                return BadRequest("Invalid product data.");
+            }
+
             var product = _context.Products.Find(id);
             if (product == null)
             {
@@ -51,8 +76,8 @@ namespace pos_service.Controllers
             return Ok(product);
         }
 
-
-                [HttpDelete("{id}")]
+        // ✅ DELETE: /api/Product/{id} - Delete a product
+        [HttpDelete("{id}")]
         public IActionResult DeleteProduct(int id)
         {
             var product = _context.Products.Find(id);
@@ -63,12 +88,7 @@ namespace pos_service.Controllers
 
             _context.Products.Remove(product);
             _context.SaveChanges();
-            return Ok($"Product with ID {id} deleted successfully.");
+            return Ok(new { message = $"Product with ID {id} deleted successfully." });
         }
-
-
     }
-
-    
-
 }
